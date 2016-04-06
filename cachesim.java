@@ -2,8 +2,9 @@
 public class cachesim {
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+		for(String str:args){
+			System.out.println(Integer.decode(str));
+		}
 
 	}
-
 }
