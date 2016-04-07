@@ -73,7 +73,7 @@ public class cachesim {
 			char hex = revHexMap.get(halfBtye);
 			result = result + hex;
 		}
-		return "0x" + result;
+		return result;
 	}
 	
 	public void run(Scanner source, MainMemory mem, int assoc, int blockSize, int cacheCap){
