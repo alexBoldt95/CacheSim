@@ -73,7 +73,7 @@ public class cachesim {
 			char hex = revHexMap.get(halfBtye);
 			result = result + hex;
 		}
-		return result;
+		return "0x" + result;
 	}
 	
 	public void run(Scanner source, MainMemory mem, int assoc, int blockSize, int cacheCap){
@@ -106,7 +106,6 @@ public class cachesim {
 	
 	public static void main(String[] args) {
 		cachesim cs = new cachesim();
-		//System.out.println(Integer.parseInt("10101101101111101110111100000000",2));
 		String fileName = args[0];
 		int cacheSize = Integer.parseInt(args[1]);
 		int assoc = Integer.parseInt(args[2]);
