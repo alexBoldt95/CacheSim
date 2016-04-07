@@ -63,9 +63,14 @@ public class WaySet {
 	}
 	
 	public static void main(String[] args) {
-		MainMemory mem = new MainMemory(1024);
-		WaySet test = new WaySet(64, 4);
+		MainMemory mem = new MainMemory((int) Math.pow(2, 24));
+		WaySet test = new WaySet(64, 2);
 		String[] data = new String[]{"10101010", "00000000", "11110000", "11010011"};
+		System.out.println(test.write(2, 19, 2, data, mem, 531));
+		String[] ans = test.read(2, 19, 4, 64, mem, 531);
+		System.out.println(Arrays.toString(ans));
+		String[] ans1 = test.read(2, 19, 4, 64, mem, 531);
+		System.out.println(Arrays.toString(ans1));
 		
 	}
 
