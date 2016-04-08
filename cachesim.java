@@ -36,9 +36,15 @@ public class cachesim {
 		//System.out.println(tag);
 		int setIndex = address << 8 + tagBits;
 		setIndex = setIndex >>> 8 + tagBits + blockBits;
+		if(tagBits == 24 || tagBits + blockBits ==24){
+			setIndex = 0;
+		}
 		//System.out.println(setIndex);
 		int blockOffset = address << 8 + tagBits + setIndexBits;
 		blockOffset = blockOffset >>> 8 + tagBits + setIndexBits;
+		if (tagBits + setIndexBits == 24){
+			blockOffset = 0;
+		}
 		//System.out.println(blockOffset);
 		return new int[]{address, tag, setIndex, blockOffset};	
 	}

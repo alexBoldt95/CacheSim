@@ -1,6 +1,6 @@
 import java.util.*;
 
-public class CacheLinkedHashMap<Integer, Frame> extends LinkedHashMap{
+public class CacheLinkedHashMap<Integer, Frame> extends LinkedHashMap<Integer, Frame>{
 	private int maxSize;
 	
 	public CacheLinkedHashMap(int initialCapacity, float loadFactor, boolean accessOrder){

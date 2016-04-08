@@ -2,7 +2,7 @@ import java.util.*;
 
 public class WaySet {
 
-	public CacheLinkedHashMap<Integer, Frame> myWays;
+	private CacheLinkedHashMap<Integer, Frame> myWays;
 	
 	public WaySet(int blockSize, int associativity){ 
 		//ctor, creates a set which is a map that maps from tags to frames
