@@ -23,6 +23,195 @@ public class cachesim {
 	public static int log2(int arg){
 		return (int) Math.ceil((Math.log((double)arg)/Math.log((double)2)));
 	}
+	
+	public class CacheLinkedHashMap<Integer, Frame> extends LinkedHashMap<Integer, Frame>{
+		private int maxSize;
+		
+		public CacheLinkedHashMap(int initialCapacity, float loadFactor, boolean accessOrder, int setSize){
+			super(initialCapacity, loadFactor, accessOrder);
+			maxSize = setSize; 
+		}
+
+		protected boolean removeEldestEntry(Map.Entry eldest) {
+	        return size()>maxSize;
+	     }
+
+	}
+	
+	public class MainMemory {
+		private String[] myData;
+		
+		public MainMemory(int size){
+			myData = new String[size];
+			Arrays.fill(myData, "00000000");
+		}
+		
+		public void writeBytes(int startByte, int accessSize, String[] data){
+			int i = startByte;
+			int j = 0;
+			while(j<accessSize){
+				myData[i] = data[j];
+				i++;
+				j++;			
+			}
+		}
+		
+		public String[] giveBlock(int startByte, int blockSize){
+			String[] ret = new String[blockSize];
+			int i = startByte;
+			int j = 0;
+			while(j<blockSize){
+				ret[j] = myData[i];
+				i++;
+				j++;			
+			}
+			return ret;
+			
+		}
+	}
+
+	
+	public class WaySet {
+
+		private CacheLinkedHashMap<Integer, Frame> myWays;
+		
+		public WaySet(int blockSize, int associativity){ 
+			//ctor, creates a set which is a map that maps from tags to frames
+			float loadFactor = (float) 0.75;
+			myWays = new CacheLinkedHashMap<Integer, Frame>(0, loadFactor, true, associativity);
+			for(int t=0; t<associativity; t++){
+				myWays.put(t, new Frame(blockSize));
+			}		
+		}
+		
+		public String readHit(int tag, int blockOffset, int accessSize){ 
+			//returns a string from hit read
+			return ((Frame) myWays.get(tag)).readBytes(blockOffset, accessSize);
+		}
+		
+		public String readMiss(int tag, int blockOffset, int accessSize, int blockSize, MainMemory mem, int address){  
+			//fills the frame from memory and then hits the read
+			int blockStart = address - blockOffset;
+			String[] block = mem.giveBlock(blockStart, blockSize);
+			myWays.put( tag, new Frame(blockSize));
+			//System.out.println(myWays.containsKey(tag));
+			((Frame) myWays.get(tag)).fill(block);
+			return readHit(tag, blockOffset, accessSize);	
+		}
+		
+		public void writeHit(int tag, int blockOffset, int accessSize, String[] data, MainMemory mem, int address){ 
+			//writes to the frame as a hit and writes through to memory
+			Frame block = (Frame) myWays.get(tag);
+			block.writeBytes(blockOffset, accessSize, data);
+			mem.writeBytes(address, accessSize, data);
+		}
+		
+		public void writeMiss(int address, int accessSize, String[] data, MainMemory mem){ 
+			//a write miss that writes to memory (write-non-allocate)
+			mem.writeBytes(address, accessSize, data);
+		}
+		
+		public String[] read(int tag, int blockOffset, int accessSize, int blockSize, MainMemory mem, int address){
+			//handles reading and returns whether hit or miss in 2nd element of array
+			//System.out.println(myWays.keySet());
+			if(myWays.containsKey(tag) && ((Frame) myWays.get(tag)).getValid() == true){
+				return new String[]{readHit(tag, blockOffset, accessSize), "hit"};
+			}
+			else{
+				return new String[]{readMiss(tag, blockOffset, accessSize, blockSize, mem, address), "miss"};
+			}
+		}
+		
+		public String write(int tag, int blockOffset, int accessSize, String[] data, MainMemory mem, int address){
+			//handles writing and returns hit or miss string
+			//System.out.println(myWays.keySet());
+			if(myWays.containsKey(tag) && ((Frame) myWays.get(tag)).getValid() == true){
+				writeHit(tag, blockOffset, accessSize, data, mem, address);
+				return "hit";
+			}
+			else{
+				writeMiss(address, accessSize, data, mem);
+				return "miss";
+			}
+		}
+	}
+	
+	public class Frame{
+		private String[] myBlock;
+		private boolean valid;
+		
+		public Frame(int blockSize){
+			myBlock = new String[blockSize];
+			Arrays.fill(myBlock, "00000000");
+			valid = false;
+		}
+		
+		public void setValid(boolean input){
+			valid = input;
+		}
+		
+		public boolean getValid(){
+			return valid;
+		}
+		
+		public String readBytes(int startByte, int accessSize){
+			String[] bytes = new String[accessSize];
+			int i = startByte;
+			int j = 0;
+			while(j<accessSize){
+				bytes[j] = myBlock[i];
+				i++;
+				j++;			
+			}
+			String ret = "";
+			for(String str:bytes){
+				ret = ret.concat(str);
+			}
+			return ret;
+		}
+		
+		public void writeBytes(int startByte, int accessSize, String[] data){
+			int i = startByte;
+			int j = 0;
+			while(j<accessSize){
+				myBlock[i] = data[j];
+				i++;
+				j++;			
+			}
+		}
+		
+		public void fill(String[] data){
+			if(data.length != myBlock.length){
+				throw new Error("Cannot fill frame, incorrect block size!");
+			}
+			myBlock = data;
+			valid = true;
+		}
+	}
+	
+	public class Cache {
+		
+		WaySet[] mySets;
+		
+		public Cache(int cacheCap, int assoc, int blockSize){
+			cacheCap = cacheCap * 1024;
+			int numSets = cacheCap/(assoc * blockSize);
+			mySets = new WaySet[numSets];
+			for(int i=0; i<numSets; i++){
+				mySets[i] = new WaySet(blockSize, assoc);
+			}
+		}
+		
+		public String[] load(int tag, int setIndex, int blockOffset, int accessSize, int blockSize, MainMemory mem, int address){
+			return mySets[setIndex].read(tag, blockOffset, accessSize, blockSize, mem, address);
+		}
+		
+		public String store(int tag, int setIndex, int blockOffset, int accessSize, String[] data, MainMemory mem, int address){
+			return mySets[setIndex].write(tag, blockOffset, accessSize, data, mem, address);
+		}
+	}
+	
+
 
 	public int[] addressParse(String hexCode, int assoc, int blockSize, int cacheCap){
 		int address = Integer.decode(hexCode);
@@ -116,7 +305,7 @@ public class cachesim {
 		int cacheSize = Integer.parseInt(args[1]);
 		int assoc = Integer.parseInt(args[2]);
 		int blockSize = Integer.parseInt(args[3]);
-		MainMemory mem = new MainMemory((int) Math.pow(2, 24));
+		MainMemory mem = cs.new MainMemory((int) Math.pow(2, 24));
 		try {
 			Scanner input = new Scanner(new File(fileName));
 			cs.run(input, mem, assoc, blockSize, cacheSize);
