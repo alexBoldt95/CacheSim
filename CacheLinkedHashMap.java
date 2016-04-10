@@ -3,12 +3,8 @@ import java.util.*;
 public class CacheLinkedHashMap<Integer, Frame> extends LinkedHashMap<Integer, Frame>{
 	private int maxSize;
 	
-	public CacheLinkedHashMap(int initialCapacity, float loadFactor, boolean accessOrder){
-		super(initialCapacity, loadFactor, accessOrder); 
-	}
-	
 	public CacheLinkedHashMap(int initialCapacity, float loadFactor, boolean accessOrder, int setSize){
-		new CacheLinkedHashMap<Integer, Frame>(initialCapacity, loadFactor, accessOrder);
+		super(initialCapacity, loadFactor, accessOrder);
 		maxSize = setSize; 
 	}
 

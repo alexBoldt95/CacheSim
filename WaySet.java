@@ -36,12 +36,13 @@ public class WaySet {
 	}
 	
 	public void writeMiss(int address, int accessSize, String[] data, MainMemory mem){ 
-		//a write misss that writes to memory (write-non-allocate)
+		//a write miss that writes to memory (write-non-allocate)
 		mem.writeBytes(address, accessSize, data);
 	}
 	
 	public String[] read(int tag, int blockOffset, int accessSize, int blockSize, MainMemory mem, int address){
 		//handles reading and returns whether hit or miss in 2nd element of array
+		//System.out.println(myWays.keySet());
 		if(myWays.containsKey(tag) && ((Frame) myWays.get(tag)).getValid() == true){
 			return new String[]{readHit(tag, blockOffset, accessSize), "hit"};
 		}
@@ -52,6 +53,7 @@ public class WaySet {
 	
 	public String write(int tag, int blockOffset, int accessSize, String[] data, MainMemory mem, int address){
 		//handles writing and returns hit or miss string
+		//System.out.println(myWays.keySet());
 		if(myWays.containsKey(tag) && ((Frame) myWays.get(tag)).getValid() == true){
 			writeHit(tag, blockOffset, accessSize, data, mem, address);
 			return "hit";
